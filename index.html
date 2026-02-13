@@ -1,0 +1,1134 @@
+<html lang="it"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Running Coach</title>
+    <meta name="theme-color" content="#FF6B35">
+    <link rel="manifest" href="manifest.json">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #FF6B35;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: #667eea;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active .toggle-slider {
+            transform: translateX(30px);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .training-plan {
+            margin-top: 20px;
+        }
+
+        .week {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .week h3 {
+            color: #FF6B35;
+            margin-bottom: 10px;
+        }
+
+        .session {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .running-screen {
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .phase-indicator {
+            background: #FF6B35;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .active-phase {
+            animation: pulse 2s infinite;
+        }
+
+        .optional-label {
+            color: #999;
+            font-size: 0.85em;
+            font-weight: normal;
+        }
+
+        .workout-list {
+            list-style: none;
+        }
+
+        .workout-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 4px solid #10b981;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .workout-item:hover {
+            transform: translateX(5px);
+        }
+
+        .workout-item.completed {
+            opacity: 0.6;
+            border-left-color: #ccc;
+        }
+
+        .workout-item.fartlek {
+            border-left-color: #FF6B35;
+        }
+
+        .workout-item.long {
+            border-left-color: #667eea;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            transition: width 0.3s;
+        }
+
+        .plan-summary {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .plan-summary strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Schermata 1: Setup Iniziale -->
+        <div id="setupScreen" class="card">
+            <h1>🏃‍♂️ Running Coach</h1>
+            <p style="margin-bottom: 30px; color: #666;">Il tuo allenatore personale per la corsa</p>
+            
+            <div class="form-group">
+                <label>Quanti km riesci a correre ora? *</label>
+                <input type="number" id="currentKm" step="0.5" min="0" placeholder="es. 5" required="">
+            </div>
+
+            <div class="form-group">
+                <label>Quanti km vuoi raggiungere? *</label>
+                <input type="number" id="targetKm" step="0.5" min="0" placeholder="es. 10" required="">
+            </div>
+
+            <div class="form-group">
+                <label>Entro quale data? *</label>
+                <input type="date" id="targetDate" required="">
+            </div>
+
+            <div class="form-group">
+                <label>Passo attuale (min/km) <span class="optional-label">- opzionale</span></label>
+                <input type="text" id="currentPace" placeholder="es. 6:30">
+            </div>
+
+            <div class="form-group">
+                <label>Passo desiderato (min/km) <span class="optional-label">- opzionale</span></label>
+                <input type="text" id="targetPace" placeholder="es. 5:30">
+            </div>
+
+            <div class="form-group">
+                <label>Corse a settimana <span class="optional-label">- opzionale</span></label>
+                <select id="runsPerWeek">
+                    <option value="2">2 volte</option>
+                    <option value="3">3 volte</option>
+                    <option value="4" selected="">4 volte</option>
+                    <option value="5">5 volte</option>
+                    <option value="6">6 volte</option>
+                </select>
+            </div>
+
+            <div class="toggle-container">
+                <span style="font-weight: 600;">Fartlek basato su:</span>
+                <span id="fartlekLabel">Distanza (metri)</span>
+                <div class="toggle" id="fartlekToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="generatePlan()">Genera Piano di Allenamento</button>
+        </div>
+
+        <!-- Schermata 2: Piano di Allenamento -->
+        <div id="planScreen" class="card hidden">
+            <h2>📅 Il Tuo Piano di Allenamento</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="planProgress" style="width: 0%"></div>
+            </div>
+            <div id="planContent"></div>
+            <button class="btn btn-secondary" onclick="backToSetup()">Modifica Parametri</button>
+        </div>
+
+        <!-- Schermata 3: Allenamento in Corso -->
+        <div id="runningScreen" class="card hidden">
+            <div class="running-screen">
+                <h2>🏃‍♂️ Allenamento in Corso</h2>
+                
+                <div class="phase-indicator" id="phaseIndicator">
+                    Pronto per iniziare
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="distanceValue">0.00</div>
+                        <div class="stat-label">km percorsi</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="paceValue">--:--</div>
+                        <div class="stat-label">passo (min/km)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="timeValue">00:00</div>
+                        <div class="stat-label">tempo totale</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="speedValue">0.0</div>
+                        <div class="stat-label">km/h</div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-success" id="startBtn" onclick="startWorkout()">▶ Inizia</button>
+                    <button class="btn btn-danger hidden" id="pauseBtn" onclick="pauseWorkout()">⏸ Pausa</button>
+                    <button class="btn btn-secondary" onclick="stopWorkout()">⏹ Termina</button>
+                    <button class="btn btn-secondary" onclick="backToPlan()">◀ Piano</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio silenzioso per mantenere attivo in background -->
+    <audio id="silentAudio" loop="">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
+    </audio>
+
+    <script>
+        // ===================== VARIABILI GLOBALI =====================
+        let appState = {
+            fartlekMode: 'distance', // 'distance' o 'time'
+            plan: null,
+            currentWorkout: null,
+            wakeLock: null,
+            isRunning: false,
+            isPaused: false,
+            startTime: null,
+            elapsedTime: 0,
+            distance: 0,
+            lastPosition: null,
+            watchId: null,
+            phases: [],
+            currentPhaseIndex: 0,
+            phaseStartDistance: 0,
+            phaseStartTime: 0,
+            speechSynth: window.speechSynthesis
+        };
+
+        // ===================== SETUP E CONFIGURAZIONE =====================
+        
+        // Toggle Fartlek
+        document.getElementById('fartlekToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            appState.fartlekMode = this.classList.contains('active') ? 'time' : 'distance';
+            document.getElementById('fartlekLabel').textContent = 
+                appState.fartlekMode === 'distance' ? 'Distanza (metri)' : 'Tempo (minuti)';
+        });
+
+        // Imposta data minima ad oggi
+        document.getElementById('targetDate').min = new Date().toISOString().split('T')[0];
+
+        // ===================== GENERAZIONE PIANO =====================
+        
+        function generatePlan() {
+            const currentKm = parseFloat(document.getElementById('currentKm').value);
+            const targetKm = parseFloat(document.getElementById('targetKm').value);
+            const targetDate = new Date(document.getElementById('targetDate').value);
+            const runsPerWeek = parseInt(document.getElementById('runsPerWeek').value);
+            
+            if (!currentKm || !targetKm || !targetDate) {
+                speak('Compila tutti i campi obbligatori');
+                alert('Compila tutti i campi obbligatori (*)');
+                return;
+            }
+
+            if (targetKm <= currentKm) {
+                speak('Il chilometraggio target deve essere maggiore di quello attuale');
+                alert('Il km target deve essere maggiore del km attuale!');
+                return;
+            }
+
+            const today = new Date();
+            const weeks = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24 * 7));
+            
+            if (weeks < 4) {
+                speak('Serve almeno 4 settimane per un allenamento sicuro');
+                alert('Serve almeno 4 settimane per un piano sicuro!');
+                return;
+            }
+
+            // Calcola progressione
+            const kmIncrease = targetKm - currentKm;
+            const weeklyIncrease = kmIncrease / weeks;
+
+            const plan = {
+                weeks: weeks,
+                runsPerWeek: runsPerWeek,
+                currentKm: currentKm,
+                targetKm: targetKm,
+                targetDate: targetDate,
+                schedule: []
+            };
+
+            // Genera settimane
+            for (let week = 1; week <= weeks; week++) {
+                const weekKm = currentKm + (weeklyIncrease * week);
+                const sessions = generateWeekSessions(weekKm, runsPerWeek, week, weeks);
+                plan.schedule.push({
+                    week: week,
+                    targetKm: weekKm.toFixed(1),
+                    sessions: sessions
+                });
+            }
+
+            appState.plan = plan;
+            displayPlan(plan);
+            
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('planScreen').classList.remove('hidden');
+            
+            speak('Piano di allenamento generato con successo!');
+        }
+
+        function generateWeekSessions(weekKm, runsPerWeek, weekNum, totalWeeks) {
+            const sessions = [];
+            const isFartlekWeek = weekNum % 2 === 1; // Fartlek settimane dispari, Tempo pari
+
+            // ========== 2 CORSE/SETTIMANA: 1 Lungo + 1 Fartlek/Tempo ==========
+            if (runsPerWeek === 2) {
+                // Sessione 1: Fartlek o Tempo alternato
+                if (isFartlekWeek) {
+                    sessions.push(generateFartlek(weekKm * 0.4));
+                } else {
+                    sessions.push({
+                        type: 'tempo',
+                        name: 'Corsa Tempo',
+                        distance: (weekKm * 0.4).toFixed(1),
+                        description: 'Ritmo sostenuto ma controllato'
+                    });
+                }
+
+                // Sessione 2: Lungo
+                sessions.push({
+                    type: 'long',
+                    name: 'Lungo',
+                    distance: (weekKm * 0.6).toFixed(1),
+                    description: 'Corsa lunga a ritmo lento e costante'
+                });
+            }
+
+            // ========== 3 CORSE/SETTIMANA ==========
+            if (runsPerWeek === 3) {
+                // Sessione 1: Corsa Facile
+                sessions.push({
+                    type: 'easy',
+                    name: 'Corsa Facile',
+                    distance: (weekKm * 0.25).toFixed(1),
+                    description: 'Ritmo conversazione, rilassato'
+                });
+
+                // Sessione 2: Fartlek o Tempo
+                if (isFartlekWeek) {
+                    sessions.push(generateFartlek(weekKm * 0.35));
+                } else {
+                    sessions.push({
+                        type: 'tempo',
+                        name: 'Corsa Tempo',
+                        distance: (weekKm * 0.35).toFixed(1),
+                        description: 'Ritmo sostenuto ma controllato'
+                    });
+                }
+
+                // Sessione 3: Lungo
+                sessions.push({
+                    type: 'long',
+                    name: 'Lungo',
+                    distance: (weekKm * 0.45).toFixed(1),
+                    description: 'Corsa lunga a ritmo lento'
+                });
+            }
+
+            // ========== 4 CORSE/SETTIMANA ==========
+            if (runsPerWeek === 4) {
+                sessions.push({
+                    type: 'easy',
+                    name: 'Corsa Facile',
+                    distance: (weekKm * 0.25).toFixed(1),
+                    description: 'Ritmo conversazione, rilassato'
+                });
+
+                if (isFartlekWeek) {
+                    sessions.push(generateFartlek(weekKm * 0.3));
+                } else {
+                    sessions.push({
+                        type: 'tempo',
+                        name: 'Corsa Tempo',
+                        distance: (weekKm * 0.3).toFixed(1),
+                        description: 'Ritmo sostenuto ma controllato'
+                    });
+                }
+
+                sessions.push({
+                    type: 'long',
+                    name: 'Lungo',
+                    distance: (weekKm * 0.4).toFixed(1),
+                    description: 'Corsa lunga a ritmo lento'
+                });
+
+                sessions.push({
+                    type: 'recovery',
+                    name: 'Recupero Attivo',
+                    distance: (weekKm * 0.2).toFixed(1),
+                    description: 'Molto lento, recupero muscolare'
+                });
+            }
+
+            // ========== 5 CORSE/SETTIMANA ==========
+            if (runsPerWeek === 5) {
+                sessions.push({
+                    type: 'easy',
+                    name: 'Corsa Facile',
+                    distance: (weekKm * 0.2).toFixed(1),
+                    description: 'Ritmo conversazione'
+                });
+
+                if (isFartlekWeek) {
+                    sessions.push(generateFartlek(weekKm * 0.25));
+                } else {
+                    sessions.push({
+                        type: 'tempo',
+                        name: 'Corsa Tempo',
+                        distance: (weekKm * 0.25).toFixed(1),
+                        description: 'Ritmo sostenuto'
+                    });
+                }
+
+                sessions.push({
+                    type: 'easy',
+                    name: 'Corsa Facile',
+                    distance: (weekKm * 0.2).toFixed(1),
+                    description: 'Ritmo conversazione'
+                });
+
+                sessions.push({
+                    type: 'long',
+                    name: 'Lungo',
+                    distance: (weekKm * 0.35).toFixed(1),
+                    description: 'Corsa lunga a ritmo lento'
+                });
+
+                sessions.push({
+                    type: 'recovery',
+                    name: 'Recupero Attivo',
+                    distance: (weekKm * 0.15).toFixed(1),
+                    description: 'Molto lento, recupero'
+                });
+            }
+
+            // ========== 6 CORSE/SETTIMANA ==========
+            if (runsPerWeek === 6) {
+                sessions.push({
+                    type: 'easy',
+                    name: 'Corsa Facile',
+                    distance: (weekKm * 0.18).toFixed(1),
+                    description: 'Ritmo conversazione'
+                });
+
+                if (isFartlekWeek) {
+                    sessions.push(generateFartlek(weekKm * 0.22));
+                } else {
+                    sessions.push({
+                        type: 'tempo',
+                        name: 'Corsa Tempo',
+                        distance: (weekKm * 0.22).toFixed(1),
+                        description: 'Ritmo sostenuto'
+                    });
+                }
+
+                sessions.push({
+                    type: 'easy',
+                    name: 'Corsa Facile',
+                    distance: (weekKm * 0.18).toFixed(1),
+                    description: 'Ritmo conversazione'
+                });
+
+                sessions.push({
+                    type: 'hills',
+                    name: 'Ripetute in Salita',
+                    distance: (weekKm * 0.15).toFixed(1),
+                    description: 'Forza e potenza'
+                });
+
+                sessions.push({
+                    type: 'long',
+                    name: 'Lungo',
+                    distance: (weekKm * 0.3).toFixed(1),
+                    description: 'Corsa lunga a ritmo lento'
+                });
+
+                sessions.push({
+                    type: 'recovery',
+                    name: 'Recupero Attivo',
+                    distance: (weekKm * 0.12).toFixed(1),
+                    description: 'Molto lento, recupero'
+                });
+            }
+
+            return sessions;
+        }
+
+        function generateFartlek(distance) {
+            if (appState.fartlekMode === 'distance') {
+                const reps = distance < 3 ? 6 : 8;
+                const intervals = `${reps}x400m veloci + 200m recupero`;
+                
+                return {
+                    type: 'fartlek',
+                    name: 'Fartlek (distanza)',
+                    distance: distance.toFixed(1),
+                    description: intervals,
+                    intervals: generateDistanceIntervals(reps, 400, 200)
+                };
+            } else {
+                const reps = distance < 3 ? 6 : 8;
+                const intervals = `${reps}x2min veloci + 1min recupero`;
+                
+                return {
+                    type: 'fartlek',
+                    name: 'Fartlek (tempo)',
+                    distance: distance.toFixed(1),
+                    description: intervals,
+                    intervals: generateTimeIntervals(reps, 120, 60)
+                };
+            }
+        }
+
+        function generateDistanceIntervals(reps, fastDist, recDist) {
+            const intervals = [];
+            for (let i = 0; i < reps; i++) {
+                intervals.push({
+                    type: 'fast',
+                    distance: fastDist,
+                    instruction: `${fastDist} metri veloci`
+                });
+                if (i < reps - 1) {
+                    intervals.push({
+                        type: 'recovery',
+                        distance: recDist,
+                        instruction: `${recDist} metri recupero`
+                    });
+                }
+            }
+            return intervals;
+        }
+
+        function generateTimeIntervals(reps, fastTime, recTime) {
+            const intervals = [];
+            for (let i = 0; i < reps; i++) {
+                intervals.push({
+                    type: 'fast',
+                    duration: fastTime,
+                    instruction: `${fastTime / 60} minuti veloci`
+                });
+                if (i < reps - 1) {
+                    intervals.push({
+                        type: 'recovery',
+                        duration: recTime,
+                        instruction: `${recTime} secondi recupero`
+                    });
+                }
+            }
+            return intervals;
+        }
+
+        // ===================== VISUALIZZAZIONE PIANO =====================
+        
+        function displayPlan(plan) {
+            const content = document.getElementById('planContent');
+            let html = `
+                <div class="plan-summary">
+                    <strong>📊 Riepilogo Piano</strong><br>
+                    Durata: ${plan.weeks} settimane<br>
+                    Frequenza: ${plan.runsPerWeek} corse/settimana<br>
+                    Obiettivo: ${plan.currentKm} km → ${plan.targetKm} km<br>
+                    Fartlek: ${appState.fartlekMode === 'distance' ? 'Distanza (metri)' : 'Tempo (minuti)'}
+                </div>
+            `;
+
+            plan.schedule.forEach(week => {
+                html += `
+                    <div class="week">
+                        <h3>📅 Settimana ${week.week} - Target: ${week.targetKm} km</h3>
+                        <ul class="workout-list">
+                `;
+                
+                week.sessions.forEach((session, idx) => {
+                    html += `
+                        <li class="workout-item ${session.type}" onclick="startSession(${week.week}, ${idx})">
+                            <strong>${session.name}</strong><br>
+                            <span style="color: #667eea;">📏 ${session.distance} km</span><br>
+                            <span style="font-size: 0.9em; color: #666;">${session.description}</span>
+                        </li>
+                    `;
+                });
+
+                html += `
+                        </ul>
+                    </div>
+                `;
+            });
+
+            content.innerHTML = html;
+        }
+
+        // ===================== AVVIO ALLENAMENTO =====================
+        
+        function startSession(weekNum, sessionIdx) {
+            const session = appState.plan.schedule[weekNum - 1].sessions[sessionIdx];
+            appState.currentWorkout = session;
+            
+            // Reset statistiche
+            appState.distance = 0;
+            appState.elapsedTime = 0;
+            document.getElementById('distanceValue').textContent = '0.00';
+            document.getElementById('timeValue').textContent = '00:00';
+            document.getElementById('paceValue').textContent = '--:--';
+            document.getElementById('speedValue').textContent = '0.0';
+            
+            if (session.type === 'fartlek' && session.intervals) {
+                appState.phases = session.intervals;
+                appState.currentPhaseIndex = 0;
+                document.getElementById('phaseIndicator').textContent = 'Pronto per il Fartlek';
+            } else {
+                appState.phases = [];
+                document.getElementById('phaseIndicator').textContent = `Pronto per ${session.name}`;
+            }
+
+            document.getElementById('planScreen').classList.add('hidden');
+            document.getElementById('runningScreen').classList.remove('hidden');
+            
+            speak(`Preparati per ${session.name}. Distanza: ${session.distance} chilometri`);
+        }
+
+        function startWorkout() {
+            if (appState.isRunning) return;
+
+            appState.isRunning = true;
+            appState.isPaused = false;
+            appState.startTime = Date.now() - appState.elapsedTime;
+            
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('pauseBtn').classList.remove('hidden');
+
+            // Richiedi Wake Lock
+            requestWakeLock();
+
+            // Avvia audio silenzioso
+            document.getElementById('silentAudio').play().catch(() => {});
+
+            // Avvia GPS tracking
+            startGPSTracking();
+
+            // Avvia timer
+            appState.timerInterval = setInterval(updateTimer, 1000);
+
+            // Se è Fartlek, avvia la prima fase
+            if (appState.phases.length > 0) {
+                startPhase(0);
+            }
+
+            speak('Allenamento iniziato. Buona corsa!');
+        }
+
+        function pauseWorkout() {
+            if (!appState.isRunning) return;
+
+            if (!appState.isPaused) {
+                // Metti in pausa
+                appState.isPaused = true;
+                appState.elapsedTime = Date.now() - appState.startTime;
+                
+                document.getElementById('pauseBtn').textContent = '▶ Riprendi';
+                
+                clearInterval(appState.timerInterval);
+                stopGPSTracking();
+
+                speak('Allenamento in pausa');
+            } else {
+                // Riprendi
+                appState.isPaused = false;
+                appState.startTime = Date.now() - appState.elapsedTime;
+                
+                document.getElementById('pauseBtn').textContent = '⏸ Pausa';
+                
+                appState.timerInterval = setInterval(updateTimer, 1000);
+                startGPSTracking();
+
+                speak('Allenamento ripreso');
+            }
+        }
+
+        function stopWorkout() {
+            if (!confirm('Vuoi terminare l\'allenamento?')) return;
+
+            appState.isRunning = false;
+            appState.isPaused = false;
+            
+            clearInterval(appState.timerInterval);
+            stopGPSTracking();
+            releaseWakeLock();
+            document.getElementById('silentAudio').pause();
+
+            // Reset
+            appState.elapsedTime = 0;
+            appState.distance = 0;
+            appState.currentPhaseIndex = 0;
+            appState.lastPosition = null;
+            
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('pauseBtn').classList.add('hidden');
+            document.getElementById('pauseBtn').textContent = '⏸ Pausa';
+
+            const finalDist = document.getElementById('distanceValue').textContent;
+            const finalTime = document.getElementById('timeValue').textContent;
+            
+            speak(`Allenamento terminato. Hai corso ${finalDist} chilometri in ${finalTime}. Ottimo lavoro!`);
+            
+            // Torna al piano dopo 3 secondi
+            setTimeout(backToPlan, 3000);
+        }
+
+        // ===================== GPS TRACKING =====================
+        
+        function startGPSTracking() {
+            if (!navigator.geolocation) {
+                alert('GPS non disponibile sul tuo dispositivo');
+                return;
+            }
+
+            appState.watchId = navigator.geolocation.watchPosition(
+                updatePosition,
+                handleGPSError,
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                }
+            );
+        }
+
+        function updatePosition(position) {
+            if (!appState.isRunning || appState.isPaused) return;
+
+            const newPos = {
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+                timestamp: Date.now()
+            };
+
+            if (appState.lastPosition) {
+                const dist = calculateDistance(
+                    appState.lastPosition.lat,
+                    appState.lastPosition.lon,
+                    newPos.lat,
+                    newPos.lon
+                );
+
+                // Filtro: ignora se velocità > 25 km/h (probabilmente errore GPS)
+                const timeDiff = (newPos.timestamp - appState.lastPosition.timestamp) / 1000;
+                const speed = (dist / timeDiff) * 3.6; // km/h
+
+                if (speed < 25 && dist > 0) {
+                    appState.distance += dist;
+                    updateStats();
+                    checkPhaseProgress();
+                }
+            }
+
+            appState.lastPosition = newPos;
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            // Formula di Haversine
+            const R = 6371; // Raggio Terra in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function handleGPSError(error) {
+            console.error('GPS Error:', error);
+            if (error.code === error.PERMISSION_DENIED) {
+                alert('Permesso GPS negato. Attiva la geolocalizzazione nelle impostazioni.');
+            }
+        }
+
+        function stopGPSTracking() {
+            if (appState.watchId) {
+                navigator.geolocation.clearWatch(appState.watchId);
+                appState.watchId = null;
+            }
+        }
+
+        // ===================== GESTIONE FASI FARTLEK =====================
+        
+        function startPhase(index) {
+            if (index >= appState.phases.length) {
+                speak('Fartlek completato! Ottimo lavoro!');
+                return;
+            }
+
+            appState.currentPhaseIndex = index;
+            const phase = appState.phases[index];
+            appState.phaseStartDistance = appState.distance;
+            appState.phaseStartTime = Date.now();
+
+            const indicator = document.getElementById('phaseIndicator');
+            indicator.textContent = phase.instruction;
+            indicator.classList.add('active-phase');
+
+            speak(phase.instruction);
+
+            // Se basato su tempo, imposta timer
+            if (phase.duration) {
+                setTimeout(() => {
+                    if (appState.isRunning && !appState.isPaused) {
+                        nextPhase();
+                    }
+                }, phase.duration * 1000);
+            }
+        }
+
+        function checkPhaseProgress() {
+            if (appState.phases.length === 0) return;
+            if (appState.currentPhaseIndex >= appState.phases.length) return;
+
+            const phase = appState.phases[appState.currentPhaseIndex];
+            
+            // Se basato su distanza
+            if (phase.distance) {
+                const phaseDist = (appState.distance - appState.phaseStartDistance) * 1000; // in metri
+                if (phaseDist >= phase.distance) {
+                    nextPhase();
+                }
+            }
+        }
+
+        function nextPhase() {
+            const nextIndex = appState.currentPhaseIndex + 1;
+            if (nextIndex < appState.phases.length) {
+                startPhase(nextIndex);
+            } else {
+                document.getElementById('phaseIndicator').textContent = 'Fartlek completato! 🎉';
+                document.getElementById('phaseIndicator').classList.remove('active-phase');
+                speak('Fartlek completato! Ottimo lavoro!');
+            }
+        }
+
+        // ===================== AGGIORNAMENTO STATISTICHE =====================
+        
+        function updateTimer() {
+            if (!appState.isRunning || appState.isPaused) return;
+
+            appState.elapsedTime = Date.now() - appState.startTime;
+            updateStats();
+        }
+
+        function updateStats() {
+            const seconds = Math.floor(appState.elapsedTime / 1000);
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.getElementById('timeValue').textContent = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            document.getElementById('distanceValue').textContent = appState.distance.toFixed(2);
+
+            if (appState.distance > 0 && appState.elapsedTime > 0) {
+                const hours = appState.elapsedTime / (1000 * 60 * 60);
+                const speed = appState.distance / hours;
+                document.getElementById('speedValue').textContent = speed.toFixed(1);
+
+                const paceMinPerKm = 60 / speed;
+                const paceMins = Math.floor(paceMinPerKm);
+                const paceSecs = Math.floor((paceMinPerKm - paceMins) * 60);
+                document.getElementById('paceValue').textContent = 
+                    `${paceMins}:${String(paceSecs).padStart(2, '0')}`;
+            }
+        }
+
+        // ===================== WAKE LOCK =====================
+        
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    appState.wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock attivo');
+                }
+            } catch (err) {
+                console.log('Wake Lock non disponibile:', err);
+            }
+        }
+
+        function releaseWakeLock() {
+            if (appState.wakeLock) {
+                appState.wakeLock.release();
+                appState.wakeLock = null;
+            }
+        }
+
+        // ===================== SINTESI VOCALE =====================
+        
+        function speak(text) {
+            if (!appState.speechSynth) return;
+            
+            appState.speechSynth.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'it-IT';
+            utterance.rate = 0.9;
+            utterance.volume = 1;
+            
+            appState.speechSynth.speak(utterance);
+        }
+
+        // ===================== NAVIGAZIONE =====================
+        
+        function backToSetup() {
+            document.getElementById('planScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.remove('hidden');
+        }
+
+        function backToPlan() {
+            if (appState.isRunning) {
+                if (!confirm('Allenamento in corso. Vuoi tornare al piano?')) return;
+                stopWorkout();
+                return;
+            }
+            document.getElementById('runningScreen').classList.add('hidden');
+            document.getElementById('planScreen').classList.remove('hidden');
+        }
+
+        // ===================== PWA & SERVICE WORKER =====================
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registrato'))
+                .catch(err => console.log('SW Error:', err));
+        }
+
+        // Gestisci visibility change per mantenere attivo
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && appState.isRunning) {
+                document.getElementById('silentAudio').play().catch(() => {});
+            }
+        });
+    </script>
+
+</body></html>
