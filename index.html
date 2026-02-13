@@ -288,6 +288,15 @@
         .plan-summary strong {
             color: #667eea;
         }
+
+        .info-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -295,15 +304,19 @@
         <!-- Schermata 1: Setup Iniziale -->
         <div id="setupScreen" class="card">
             <h1>🏃‍♂️ Running Coach</h1>
-            <p style="margin-bottom: 30px; color: #666;">Il tuo allenatore personale per la corsa</p>
+            <p style="margin-bottom: 20px; color: #666;">Il tuo allenatore personale per la corsa</p>
+            
+            <div class="info-box">
+                💡 <strong>Nota:</strong> I km indicati si riferiscono alla tua <strong>corsa lunga</strong> (il lungo), non al totale settimanale.
+            </div>
             
             <div class="form-group">
-                <label>Quanti km riesci a correre ora? *</label>
+                <label>Quanti km di lungo riesci a fare ora? *</label>
                 <input type="number" id="currentKm" step="0.5" min="0" placeholder="es. 5" required="">
             </div>
 
             <div class="form-group">
-                <label>Quanti km vuoi raggiungere? *</label>
+                <label>Quanti km di lungo vuoi raggiungere? *</label>
                 <input type="number" id="targetKm" step="0.5" min="0" placeholder="es. 10" required="">
             </div>
 
@@ -460,26 +473,27 @@
                 return;
             }
 
-            // Calcola progressione
-            const kmIncrease = targetKm - currentKm;
-            const weeklyIncrease = kmIncrease / weeks;
+            // Calcola progressione del LUNGO
+            const longKmIncrease = targetKm - currentKm;
+            const weeklyLongIncrease = longKmIncrease / weeks;
 
             const plan = {
                 weeks: weeks,
                 runsPerWeek: runsPerWeek,
-                currentKm: currentKm,
-                targetKm: targetKm,
+                currentLongKm: currentKm,
+                targetLongKm: targetKm,
                 targetDate: targetDate,
                 schedule: []
             };
 
             // Genera settimane
             for (let week = 1; week <= weeks; week++) {
-                const weekKm = currentKm + (weeklyIncrease * week);
-                const sessions = generateWeekSessions(weekKm, runsPerWeek, week, weeks);
+                const longKm = currentKm + (weeklyLongIncrease * week);
+                const progressPercentage = week / weeks; // 0 a 1
+                const sessions = generateWeekSessions(longKm, runsPerWeek, week, weeks, progressPercentage);
                 plan.schedule.push({
                     week: week,
-                    targetKm: weekKm.toFixed(1),
+                    longKm: longKm.toFixed(1),
                     sessions: sessions
                 });
             }
@@ -493,51 +507,51 @@
             speak('Piano di allenamento generato con successo!');
         }
 
-        function generateWeekSessions(weekKm, runsPerWeek, weekNum, totalWeeks) {
+        function generateWeekSessions(longKm, runsPerWeek, weekNum, totalWeeks, progress) {
             const sessions = [];
             const isFartlekWeek = weekNum % 2 === 1; // Fartlek settimane dispari, Tempo pari
 
-            // ========== 2 CORSE/SETTIMANA: 1 Lungo + 1 Fartlek/Tempo ==========
+            // ========== 2 CORSE/SETTIMANA: 1 Fartlek (max 5km) + 1 Lungo ==========
             if (runsPerWeek === 2) {
-                // Sessione 1: Fartlek o Tempo alternato
+                // Sessione 1: Fartlek progressivo (sempre max 5km)
                 if (isFartlekWeek) {
-                    sessions.push(generateFartlek(weekKm * 0.4));
+                    sessions.push(generateFartlek(progress));
                 } else {
                     sessions.push({
                         type: 'tempo',
                         name: 'Corsa Tempo',
-                        distance: (weekKm * 0.4).toFixed(1),
+                        distance: Math.min(5, longKm * 0.5).toFixed(1),
                         description: 'Ritmo sostenuto ma controllato'
                     });
                 }
 
-                // Sessione 2: Lungo
+                // Sessione 2: Lungo progressivo
                 sessions.push({
                     type: 'long',
                     name: 'Lungo',
-                    distance: (weekKm * 0.6).toFixed(1),
-                    description: 'Corsa lunga a ritmo lento e costante'
+                    distance: longKm.toFixed(1),
+                    description: 'Corsa lunga a buon passo costante'
                 });
             }
 
             // ========== 3 CORSE/SETTIMANA ==========
             if (runsPerWeek === 3) {
-                // Sessione 1: Corsa Facile
+                // Sessione 1: Corsa Facile (60% del lungo)
                 sessions.push({
                     type: 'easy',
                     name: 'Corsa Facile',
-                    distance: (weekKm * 0.25).toFixed(1),
+                    distance: (longKm * 0.6).toFixed(1),
                     description: 'Ritmo conversazione, rilassato'
                 });
 
-                // Sessione 2: Fartlek o Tempo
+                // Sessione 2: Fartlek (max 5km)
                 if (isFartlekWeek) {
-                    sessions.push(generateFartlek(weekKm * 0.35));
+                    sessions.push(generateFartlek(progress));
                 } else {
                     sessions.push({
                         type: 'tempo',
                         name: 'Corsa Tempo',
-                        distance: (weekKm * 0.35).toFixed(1),
+                        distance: Math.min(5, longKm * 0.6).toFixed(1),
                         description: 'Ritmo sostenuto ma controllato'
                     });
                 }
@@ -546,8 +560,8 @@
                 sessions.push({
                     type: 'long',
                     name: 'Lungo',
-                    distance: (weekKm * 0.45).toFixed(1),
-                    description: 'Corsa lunga a ritmo lento'
+                    distance: longKm.toFixed(1),
+                    description: 'Corsa lunga a buon passo'
                 });
             }
 
@@ -556,33 +570,33 @@
                 sessions.push({
                     type: 'easy',
                     name: 'Corsa Facile',
-                    distance: (weekKm * 0.25).toFixed(1),
+                    distance: (longKm * 0.5).toFixed(1),
                     description: 'Ritmo conversazione, rilassato'
                 });
 
                 if (isFartlekWeek) {
-                    sessions.push(generateFartlek(weekKm * 0.3));
+                    sessions.push(generateFartlek(progress));
                 } else {
                     sessions.push({
                         type: 'tempo',
                         name: 'Corsa Tempo',
-                        distance: (weekKm * 0.3).toFixed(1),
-                        description: 'Ritmo sostenuto ma controllato'
+                        distance: Math.min(5, longKm * 0.6).toFixed(1),
+                        description: 'Ritmo sostenuto'
                     });
                 }
 
                 sessions.push({
-                    type: 'long',
-                    name: 'Lungo',
-                    distance: (weekKm * 0.4).toFixed(1),
-                    description: 'Corsa lunga a ritmo lento'
+                    type: 'recovery',
+                    name: 'Recupero Attivo',
+                    distance: (longKm * 0.4).toFixed(1),
+                    description: 'Molto lento, recupero muscolare'
                 });
 
                 sessions.push({
-                    type: 'recovery',
-                    name: 'Recupero Attivo',
-                    distance: (weekKm * 0.2).toFixed(1),
-                    description: 'Molto lento, recupero muscolare'
+                    type: 'long',
+                    name: 'Lungo',
+                    distance: longKm.toFixed(1),
+                    description: 'Corsa lunga a buon passo'
                 });
             }
 
@@ -591,17 +605,17 @@
                 sessions.push({
                     type: 'easy',
                     name: 'Corsa Facile',
-                    distance: (weekKm * 0.2).toFixed(1),
+                    distance: (longKm * 0.5).toFixed(1),
                     description: 'Ritmo conversazione'
                 });
 
                 if (isFartlekWeek) {
-                    sessions.push(generateFartlek(weekKm * 0.25));
+                    sessions.push(generateFartlek(progress));
                 } else {
                     sessions.push({
                         type: 'tempo',
                         name: 'Corsa Tempo',
-                        distance: (weekKm * 0.25).toFixed(1),
+                        distance: Math.min(5, longKm * 0.5).toFixed(1),
                         description: 'Ritmo sostenuto'
                     });
                 }
@@ -609,22 +623,22 @@
                 sessions.push({
                     type: 'easy',
                     name: 'Corsa Facile',
-                    distance: (weekKm * 0.2).toFixed(1),
+                    distance: (longKm * 0.4).toFixed(1),
                     description: 'Ritmo conversazione'
-                });
-
-                sessions.push({
-                    type: 'long',
-                    name: 'Lungo',
-                    distance: (weekKm * 0.35).toFixed(1),
-                    description: 'Corsa lunga a ritmo lento'
                 });
 
                 sessions.push({
                     type: 'recovery',
                     name: 'Recupero Attivo',
-                    distance: (weekKm * 0.15).toFixed(1),
+                    distance: (longKm * 0.3).toFixed(1),
                     description: 'Molto lento, recupero'
+                });
+
+                sessions.push({
+                    type: 'long',
+                    name: 'Lungo',
+                    distance: longKm.toFixed(1),
+                    description: 'Corsa lunga a buon passo'
                 });
             }
 
@@ -633,17 +647,17 @@
                 sessions.push({
                     type: 'easy',
                     name: 'Corsa Facile',
-                    distance: (weekKm * 0.18).toFixed(1),
+                    distance: (longKm * 0.4).toFixed(1),
                     description: 'Ritmo conversazione'
                 });
 
                 if (isFartlekWeek) {
-                    sessions.push(generateFartlek(weekKm * 0.22));
+                    sessions.push(generateFartlek(progress));
                 } else {
                     sessions.push({
                         type: 'tempo',
                         name: 'Corsa Tempo',
-                        distance: (weekKm * 0.22).toFixed(1),
+                        distance: Math.min(5, longKm * 0.5).toFixed(1),
                         description: 'Ritmo sostenuto'
                     });
                 }
@@ -651,57 +665,103 @@
                 sessions.push({
                     type: 'easy',
                     name: 'Corsa Facile',
-                    distance: (weekKm * 0.18).toFixed(1),
+                    distance: (longKm * 0.4).toFixed(1),
                     description: 'Ritmo conversazione'
                 });
 
                 sessions.push({
                     type: 'hills',
                     name: 'Ripetute in Salita',
-                    distance: (weekKm * 0.15).toFixed(1),
+                    distance: (longKm * 0.3).toFixed(1),
                     description: 'Forza e potenza'
-                });
-
-                sessions.push({
-                    type: 'long',
-                    name: 'Lungo',
-                    distance: (weekKm * 0.3).toFixed(1),
-                    description: 'Corsa lunga a ritmo lento'
                 });
 
                 sessions.push({
                     type: 'recovery',
                     name: 'Recupero Attivo',
-                    distance: (weekKm * 0.12).toFixed(1),
+                    distance: (longKm * 0.3).toFixed(1),
                     description: 'Molto lento, recupero'
+                });
+
+                sessions.push({
+                    type: 'long',
+                    name: 'Lungo',
+                    distance: longKm.toFixed(1),
+                    description: 'Corsa lunga a buon passo'
                 });
             }
 
             return sessions;
         }
 
-        function generateFartlek(distance) {
+        function generateFartlek(progress) {
+            // progress va da 0 (inizio) a 1 (fine piano)
+            // Progressione: più avanti = più intensità, meno recupero
+            
             if (appState.fartlekMode === 'distance') {
-                const reps = distance < 3 ? 6 : 8;
-                const intervals = `${reps}x400m veloci + 200m recupero`;
+                // Inizio: 8x400m veloci + 200m recupero = 4.8km
+                // Metà: 10x500m veloci + 150m recupero = 6.5km → limitiamo a 5km → 8x500m + 100m = 4.8km
+                // Fine: 12x400m veloci + 100m recupero = 6km → limitiamo a 5km → 10x400m + 100m = 5km
+                
+                let reps, fastDist, recDist;
+                
+                if (progress < 0.33) {
+                    // Prime settimane
+                    reps = 8;
+                    fastDist = 400;
+                    recDist = 200;
+                } else if (progress < 0.66) {
+                    // Settimane intermedie
+                    reps = 9;
+                    fastDist = 400;
+                    recDist = 150;
+                } else {
+                    // Ultime settimane
+                    reps = 10;
+                    fastDist = 400;
+                    recDist = 100;
+                }
+                
+                const totalDist = ((reps * fastDist) + ((reps - 1) * recDist)) / 1000;
+                const intervals = `${reps}x${fastDist}m veloci + ${recDist}m recupero`;
                 
                 return {
                     type: 'fartlek',
                     name: 'Fartlek (distanza)',
-                    distance: distance.toFixed(1),
+                    distance: Math.min(5, totalDist).toFixed(1),
                     description: intervals,
-                    intervals: generateDistanceIntervals(reps, 400, 200)
+                    intervals: generateDistanceIntervals(reps, fastDist, recDist)
                 };
             } else {
-                const reps = distance < 3 ? 6 : 8;
-                const intervals = `${reps}x2min veloci + 1min recupero`;
+                // Basato su tempo
+                // Inizio: 8x2min veloci + 1min recupero = 24min totali
+                // Metà: 9x2min veloci + 45sec recupero = 24.75min
+                // Fine: 10x2min veloci + 30sec recupero = 24.5min
+                
+                let reps, fastTime, recTime;
+                
+                if (progress < 0.33) {
+                    reps = 8;
+                    fastTime = 120; // 2 min
+                    recTime = 60;   // 1 min
+                } else if (progress < 0.66) {
+                    reps = 9;
+                    fastTime = 120;
+                    recTime = 45;   // 45 sec
+                } else {
+                    reps = 10;
+                    fastTime = 120;
+                    recTime = 30;   // 30 sec
+                }
+                
+                const intervals = `${reps}x${fastTime/60}min veloci + ${recTime}sec recupero`;
                 
                 return {
                     type: 'fartlek',
                     name: 'Fartlek (tempo)',
-                    distance: distance.toFixed(1),
+                    distance: '5.0', // Sempre 5km stimati
                     description: intervals,
-                    intervals: generateTimeIntervals(reps, 120, 60)
+                    intervals: generateTimeIntervals(reps, fastTime, recTime)
                 };
             }
         }
@@ -753,15 +813,16 @@
                     <strong>📊 Riepilogo Piano</strong><br>
                     Durata: ${plan.weeks} settimane<br>
                     Frequenza: ${plan.runsPerWeek} corse/settimana<br>
-                    Obiettivo: ${plan.currentKm} km → ${plan.targetKm} km<br>
-                    Fartlek: ${appState.fartlekMode === 'distance' ? 'Distanza (metri)' : 'Tempo (minuti)'}
+                    <strong>Obiettivo LUNGO:</strong> ${plan.currentLongKm} km → ${plan.targetLongKm} km<br>
+                    Fartlek: ${appState.fartlekMode === 'distance' ? 'Distanza (metri)' : 'Tempo (minuti)'} - max 5km<br>
+                    <em style="font-size: 0.85em; color: #666;">I fartlek aumentano intensità progressivamente</em>
                 </div>
             `;
 
             plan.schedule.forEach(week => {
                 html += `
                     <div class="week">
-                        <h3>📅 Settimana ${week.week} - Target: ${week.targetKm} km</h3>
+                        <h3>📅 Settimana ${week.week} - Lungo: ${week.longKm} km</h3>
                         <ul class="workout-list">
                 `;
                 
